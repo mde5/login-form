@@ -1,0 +1,22 @@
+{
+  "name": "loginform",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mde5/login-form.git"
+  },
+  "author": "Matthew De Dominicis",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mde5/login-form/issues"
+  },
+  "homepage": "https://github.com/mde5/login-form#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
