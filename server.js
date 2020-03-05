@@ -2,6 +2,7 @@ var express = require("express");
 var path = require("path");
 const data = require("./data-service.js");
 const bodyParser = require('body-parser');
+const exphbs = require('express-handlebars');
 const clientSessions = require('client-sessions');
 var app = express();
 
@@ -19,6 +20,9 @@ app.use(function(req, res, next) {
     next();
 });
 
+app.engine('handlebars', exphbs());
+app.set('view engine', 'handlebars');
+
 app.use(express.static('views'));
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -31,24 +35,30 @@ function ensureLogin(req, res, next) {
 }
 
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "/views/login.html"));
+    res.render("login");
 });
 
 app.get("/home", ensureLogin, (req, res) => {
-    res.sendFile(path.join(__dirname, "/views/home.html"));
+    res.render("home");
 });
 
 app.get("/registration", (req, res) => {
-    res.sendFile(path.join(__dirname, "/views/registration.html"));
+    res.render("registration");
+});
+
+app.get("/logout", (req, res)=> {
+    req.session.reset();
+    res.redirect('/');
 });
 
 app.post("/registration", (req, res)=> {
     data.registerUser(req.body)
     .then(() => {
-        res.sendFile(path.join(__dirname, "/views/success.html"));
+        res.render("success");
     }).catch((err) => {
         console.log(err);
-        res.sendFile(path.join(__dirname, "/views/registration.html"));
+        res.render("registration", {errorMessage: err, userName: req.body.userName});
+
     });
 });
 
@@ -62,7 +72,7 @@ app.post("/login", (req, res) =>{
         res.redirect("/home");
     }).catch((err)=>{
         console.log(err);
-        res.sendFile(path.join(__dirname, "/views/login.html"));
+        res.render("login", {errorMessage: err, userName: req.body.userName});
     });
 });
 

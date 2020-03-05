@@ -5,6 +5,11 @@
   padding: 8% 0 0;
   margin: auto;
 }
+.home-page {
+  width: 500px;
+  padding: 8% 0 0;
+  margin: auto;
+}
 .form {
   position: relative;
   z-index: 1;

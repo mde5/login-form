@@ -1,4 +1,5 @@
 var mongoose = require("mongoose");
+var sanitize = require('mongo-sanitize');
 const bcrypt = require("bcrypt");
 
 var Schema = mongoose.Schema;
@@ -6,6 +7,7 @@ var Schema = mongoose.Schema;
 var userSchema = new Schema({
     "userName":  {
         "type": String,
+        "lowercase": true,
         "unique": true
     },
     "password": String,
@@ -33,22 +35,26 @@ module.exports.initialize = function () {
 };
 
 module.exports.registerUser = function (userData) {
+    var pat = new RegExp("^[A-Za-z0-9!@#%^&*$_-]+$");
     return new Promise(function (resolve, reject) {
         if (userData.password !== userData.password2){
             reject("Passwords do not match");
+        }
+        else if (!(pat.test(userData.password))){
+            reject("Passwords may only contain alphanumeric characters and symbols - _ ! @ # $ % ^ & *");
         }
         else {
             bcrypt.genSalt(10, function(err, salt) {
                 bcrypt.hash(userData.password, salt, function(err, hash) {
                     if (err) {
                         reject("There was an error encrypting the password");
-                    } 
+                    }
                     else {
                         userData.password = hash;
                         let newUser = new User(userData);
                         newUser.save((err) => {
                             if(err) {
-                                if (err == 11000) { reject("User Name already taken"); }
+                                if (err.code == '11000') { reject("Username already taken"); }
                                 else { reject("There was an error creating the user: " + err); }
                             } 
                             else {
@@ -64,9 +70,9 @@ module.exports.registerUser = function (userData) {
 
 module.exports.checkUser = function(userData) {
     return new Promise(function (resolve, reject) {
-        User.find({ userName: userData.userName 
+        var clean = sanitize(userData.userName);
+        User.find({ userName: clean 
         }).then(function (users) {
-
             bcrypt.compare(userData.password, users[0].password).then((res) => {
             if (res) {              
                     users[0].loginHistory.push({dateTime:(new Date()).toString(), userAgent: userData.userAgent});
@@ -78,17 +84,13 @@ module.exports.checkUser = function(userData) {
                         reject("There was an error verifying the user: " + err); 
                     });
             }
-            else reject("Unable to find user:" + userData.userName);                     
+            else reject("Sorry, your login entry doesn't match our records.");                     
                 })
                 .catch((err) => {
-                    reject("Unable to find user: " + userData.userName);
+                    reject("Sorry, your login entry doesn't match our records.");
                 })    
         }).catch(() => {
-            reject("Unable to find user: " + userData.userName);
+            reject("Sorry, your login entry doesn't match our records.");
         });     
     });
-};
-
-module.exports.message = function(msg) {
-
 };
